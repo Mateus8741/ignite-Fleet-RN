@@ -1,4 +1,7 @@
 /* eslint-disable camelcase */
+import 'react-native-get-random-values'
+import './src/libs/dayjs'
+
 import { REALM_APP_ID } from '@env'
 
 import {

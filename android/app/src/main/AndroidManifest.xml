@@ -26,9 +26,9 @@
         <action android:name="android.intent.action.VIEW"/>
         <category android:name="android.intent.category.DEFAULT"/>
         <category android:name="android.intent.category.BROWSABLE"/>
+        <data android:scheme="ignitefleet"/>
         <data android:scheme="com.matt8741.ignitefleet"/>
         <data android:scheme="exp+ignitefleet"/>
-        <data android:scheme="ignitefleet"/>
       </intent-filter>
     </activity>
     <activity android:name="com.facebook.react.devsupport.DevSettingsActivity" android:exported="false"/>
