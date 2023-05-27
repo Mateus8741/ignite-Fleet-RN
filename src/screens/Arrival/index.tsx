@@ -10,7 +10,10 @@ import { History } from '../../libs/realm/schemas/History'
 
 import { Alert } from 'react-native'
 
+import { useEffect, useState } from 'react'
+import { getLastSyncTimestamp } from '../../libs/asyncStorage/syncStorage'
 import {
+  AsyncMessage,
   Container,
   Content,
   Description,
@@ -24,6 +27,8 @@ type RouteParamsProps = {
 }
 
 export function Arrival() {
+  const [dataNotSynced, setDataNotSynced] = useState(false)
+
   const route = useRoute()
   const realm = useRealm()
   const { goBack } = useNavigation()
@@ -79,6 +84,12 @@ export function Arrival() {
     }
   }
 
+  useEffect(() => {
+    getLastSyncTimestamp().then((lastsynct) =>
+      setDataNotSynced(history!.updated_at.getTime() > lastsynct),
+    )
+  }, [])
+
   return (
     <Container>
       <Header title={title} />
@@ -99,6 +110,14 @@ export function Arrival() {
 
           <Button title="Registrar chegada" onPress={handleArrivalRegister} />
         </Footer>
+      )}
+
+      {dataNotSynced && (
+        <AsyncMessage>
+          Sincronização da
+          {history?.status === 'departure' ? 'partida' : 'chegada'}
+          pendente
+        </AsyncMessage>
       )}
     </Container>
   )

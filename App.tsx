@@ -18,8 +18,11 @@ import { ThemeProvider } from 'styled-components/native'
 import { Loading } from './src/components/Loading/indes'
 import { SignIn } from './src/screens/SignIn'
 
+import { useNetInfo } from '@react-native-community/netinfo'
+import { WifiSlash } from 'phosphor-react-native'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
-import { RealmProvider } from './src/libs/realm'
+import { TopMessage } from './src/components/TopMessage'
+import { RealmProvider, syncConfig } from './src/libs/realm'
 import { Routes } from './src/routes'
 import theme from './src/theme'
 
@@ -28,6 +31,8 @@ export default function App() {
     Roboto_400Regular,
     Roboto_700Bold,
   })
+
+  const { isConnected } = useNetInfo()
 
   if (!fontsLoaded) {
     return <Loading />
@@ -42,13 +47,17 @@ export default function App() {
             backgroundColor: theme.COLORS.GRAY_800,
           }}
         >
+          {!isConnected && (
+            <TopMessage title="Você está offline" icon={WifiSlash} />
+          )}
+
           <StatusBar
             barStyle="light-content"
             backgroundColor="transparent"
             translucent
           />
           <UserProvider fallback={SignIn}>
-            <RealmProvider>
+            <RealmProvider sync={syncConfig} fallback={<Loading />}>
               <Routes />
             </RealmProvider>
           </UserProvider>
