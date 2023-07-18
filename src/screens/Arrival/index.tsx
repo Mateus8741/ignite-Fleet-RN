@@ -11,6 +11,7 @@ import { History } from '../../libs/realm/schemas/History'
 import { Alert } from 'react-native'
 
 import { useEffect, useState } from 'react'
+import { stopLocationTask } from '../../../repos/tasks/BackgroundTaskLocation'
 import { getLastSyncTimestamp } from '../../libs/asyncStorage/syncStorage'
 import {
   AsyncMessage,
@@ -64,11 +65,13 @@ export function Arrival() {
     }
   }
 
-  function handleArrivalRegister() {
+  async function handleArrivalRegister() {
     try {
       if (!history) {
         return Alert.alert('Erro', 'Não foi possível registrar a chegada.')
       }
+
+      await stopLocationTask()
 
       realm.write(() => {
         history.status = 'arrival'
