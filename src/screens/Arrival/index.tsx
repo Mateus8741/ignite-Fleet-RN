@@ -3,6 +3,7 @@ import { X } from 'phosphor-react-native'
 import { Button } from '../../components/Button'
 import { ButtonIcon } from '../../components/ButtonIcon'
 import { Header } from '../../components/Header'
+import { Map } from '../../components/Map'
 
 import { BSON } from 'realm'
 import { useObject, useRealm } from '../../libs/realm'
@@ -11,8 +12,10 @@ import { History } from '../../libs/realm/schemas/History'
 import { Alert } from 'react-native'
 
 import { useEffect, useState } from 'react'
-import { stopLocationTask } from '../../../repos/tasks/BackgroundTaskLocation'
+import { LatLng } from 'react-native-maps'
+import { getStorageLocations } from '../../libs/asyncStorage/locationStorage'
 import { getLastSyncTimestamp } from '../../libs/asyncStorage/syncStorage'
+import { stopLocationTask } from '../../tasks/backgroundTaskLocation'
 import {
   AsyncMessage,
   Container,
@@ -29,6 +32,7 @@ type RouteParamsProps = {
 
 export function Arrival() {
   const [dataNotSynced, setDataNotSynced] = useState(false)
+  const [coordinates, setCoordinates] = useState<LatLng[]>([])
 
   const route = useRoute()
   const realm = useRealm()
@@ -53,11 +57,13 @@ export function Arrival() {
     ])
   }
 
-  function removeVehicleUsage() {
+  async function removeVehicleUsage() {
     try {
       realm.write(() => {
         realm.delete(history)
       })
+
+      await stopLocationTask()
 
       goBack()
     } catch (error) {
@@ -71,12 +77,12 @@ export function Arrival() {
         return Alert.alert('Erro', 'Não foi possível registrar a chegada.')
       }
 
-      await stopLocationTask()
-
       realm.write(() => {
         history.status = 'arrival'
         history.updated_at = new Date()
       })
+
+      await stopLocationTask()
 
       Alert.alert('Sucesso', 'Chegada registrada com sucesso.')
 
@@ -87,15 +93,28 @@ export function Arrival() {
     }
   }
 
+  async function getLocationsInfo() {
+    if (!history) {
+      return
+    }
+
+    const lastSync = await getLastSyncTimestamp()
+    const updatedAt = history!.updated_at.getTime()
+    setDataNotSynced(updatedAt > lastSync)
+
+    const location = await getStorageLocations()
+    setCoordinates(location)
+  }
+
   useEffect(() => {
-    getLastSyncTimestamp().then((lastsynct) =>
-      setDataNotSynced(history!.updated_at.getTime() > lastsynct),
-    )
+    getLocationsInfo()
   }, [])
 
   return (
     <Container>
       <Header title={title} />
+
+      {coordinates.length > 0 && <Map coordinates={coordinates} />}
 
       <Content>
         <Label>Placa do veículo</Label>
