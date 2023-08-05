@@ -1,4 +1,5 @@
 import { createRealmContext } from '@realm/react'
+import { Coords } from './schemas/Coords'
 import { History } from './schemas/History'
 
 import Realm from 'realm'
@@ -15,5 +16,6 @@ export const syncConfig: any = {
 
 export const { RealmProvider, useRealm, useQuery, useObject } =
   createRealmContext({
-    schema: [History],
+    schema: [History, Coords],
+    schemaVersion: 1,
   })
