@@ -11,12 +11,16 @@ import { History } from '../../libs/realm/schemas/History'
 
 import { Alert } from 'react-native'
 
+import dayjs from 'dayjs'
 import { useEffect, useState } from 'react'
 import { LatLng } from 'react-native-maps'
+import { Loading } from '../../components/Loading/indes'
 import { Locations } from '../../components/Location'
+import { LocationInfoProps } from '../../components/LocationInfo'
 import { getStorageLocations } from '../../libs/asyncStorage/locationStorage'
 import { getLastSyncTimestamp } from '../../libs/asyncStorage/syncStorage'
 import { stopLocationTask } from '../../tasks/backgroundTaskLocation'
+import { getAddressLocation } from '../../utils/getAddressLocation'
 import {
   AsyncMessage,
   Container,
@@ -34,6 +38,12 @@ type RouteParamsProps = {
 export function Arrival() {
   const [dataNotSynced, setDataNotSynced] = useState(false)
   const [coordinates, setCoordinates] = useState<LatLng[]>([])
+  const [departure, setDeparture] = useState<LocationInfoProps>(
+    {} as LocationInfoProps,
+  )
+  const [arrival, setArrival] = useState<LocationInfoProps | null>(null)
+
+  const [loading, setLoading] = useState(true)
 
   const route = useRoute()
   const realm = useRealm()
@@ -112,11 +122,39 @@ export function Arrival() {
     } else {
       setCoordinates(history?.coords ?? [])
     }
+
+    if (history?.coords[0]) {
+      const departureStreetName = await getAddressLocation(history?.coords[0])
+      setDeparture({
+        label: `Saindo em ${departureStreetName ?? ''}`,
+        description: dayjs(history?.coords[0].timestamp).format(
+          'DD/MM/YYYY [ás] HH:mm',
+        ),
+      })
+    }
+
+    if (history?.status === 'arrival') {
+      const lastLocation = history?.coords[history?.coords.length - 1]
+      const arrivalStreetName = await getAddressLocation(lastLocation)
+
+      setArrival({
+        label: `Chegando em ${arrivalStreetName ?? ''}`,
+        description: dayjs(lastLocation?.timestamp).format(
+          'DD/MM/YYYY [ás] HH:mm',
+        ),
+      })
+    }
+
+    setLoading(false)
   }
 
   useEffect(() => {
     getLocationsInfo()
   }, [])
+
+  if (loading) {
+    return <Loading />
+  }
 
   return (
     <Container>
@@ -125,10 +163,7 @@ export function Arrival() {
       {coordinates.length > 0 && <Map coordinates={coordinates} />}
 
       <Content>
-        <Locations
-          departure={{ label: 'Saída', description: 'Saída teste' }}
-          arrival={{ label: 'Chegada', description: 'Chegada teste' }}
-        />
+        <Locations departure={departure} arrival={arrival} />
 
         <Label>Placa do veículo</Label>
 
