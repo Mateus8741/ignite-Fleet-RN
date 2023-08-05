@@ -26,7 +26,8 @@ import { History } from '../../libs/realm/schemas/History'
 import { startLocationTask } from '../../tasks/backgroundTaskLocation'
 import { getAddressLocation } from '../../utils/getAddressLocation'
 import { licensePlateValidate } from '../../utils/licensePlateValidate'
-import { Container, Content, Message } from './styles'
+import { openSetting } from '../../utils/openSetting'
+import { Container, Content, Message, MessageContent } from './styles'
 
 export function Departure() {
   const [licensePlate, setLicensePlate] = useState('')
@@ -81,6 +82,7 @@ export function Departure() {
         return Alert.alert(
           'Permissão de localização',
           'Por favor, conceda a permissão de localização para o aplicativo',
+          [{ text: 'Abrir configurações', onPress: openSetting }],
         )
       }
 
@@ -154,11 +156,15 @@ export function Departure() {
     return (
       <Container>
         <Header title="Saída" />
-        <Message>
-          Você precisa permitir que o aplicativo tenha acesso a localização para
-          acessar essa funcionalidade. Por favor, acesse as configurações do seu
-          dispositivo para conceder a permissão ao aplicativo.
-        </Message>
+        <MessageContent>
+          <Message>
+            Você precisa permitir que o aplicativo tenha acesso a localização
+            para acessar essa funcionalidade. Por favor, acesse as configurações
+            do seu dispositivo para conceder a permissão ao aplicativo.
+          </Message>
+
+          <Button title="Abrir configurarões" onPress={openSetting} />
+        </MessageContent>
       </Container>
     )
   }
