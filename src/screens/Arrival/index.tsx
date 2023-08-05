@@ -13,6 +13,7 @@ import { Alert } from 'react-native'
 
 import { useEffect, useState } from 'react'
 import { LatLng } from 'react-native-maps'
+import { Locations } from '../../components/Location'
 import { getStorageLocations } from '../../libs/asyncStorage/locationStorage'
 import { getLastSyncTimestamp } from '../../libs/asyncStorage/syncStorage'
 import { stopLocationTask } from '../../tasks/backgroundTaskLocation'
@@ -77,9 +78,12 @@ export function Arrival() {
         return Alert.alert('Erro', 'Não foi possível registrar a chegada.')
       }
 
+      const location = await getStorageLocations()
+
       realm.write(() => {
         history.status = 'arrival'
         history.updated_at = new Date()
+        history.coords.push(...location)
       })
 
       await stopLocationTask()
@@ -102,8 +106,12 @@ export function Arrival() {
     const updatedAt = history!.updated_at.getTime()
     setDataNotSynced(updatedAt > lastSync)
 
-    const location = await getStorageLocations()
-    setCoordinates(location)
+    if (history?.status === 'departure') {
+      const location = await getStorageLocations()
+      setCoordinates(location)
+    } else {
+      setCoordinates(history?.coords ?? [])
+    }
   }
 
   useEffect(() => {
@@ -117,6 +125,11 @@ export function Arrival() {
       {coordinates.length > 0 && <Map coordinates={coordinates} />}
 
       <Content>
+        <Locations
+          departure={{ label: 'Saída', description: 'Saída teste' }}
+          arrival={{ label: 'Chegada', description: 'Chegada teste' }}
+        />
+
         <Label>Placa do veículo</Label>
 
         <LicensePlate>{history?.license_plate}</LicensePlate>
